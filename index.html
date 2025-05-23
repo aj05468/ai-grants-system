@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Donation & Grants Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 20px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+        .header h1 { color: #4a5568; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .header .subtitle { color: #718096; font-size: 16px; }
+        .ai-quick-actions { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 25px; margin-bottom: 30px; color: white; box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3); }
+        .ai-quick-actions h2 { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .ai-actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .ai-action-card { background: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .ai-action-card:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-5px); }
+        .ai-action-card i { font-size: 2em; margin-bottom: 10px; display: block; }
+        .ai-action-card h3 { margin-bottom: 8px; font-size: 18px; }
+        .ai-action-card p { font-size: 14px; opacity: 0.9; }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .card { background: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+        .card h3 { color: #4a5568; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+        .tab { padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; }
+        .tab.active { border-bottom-color: #667eea; color: #667eea; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; margin: 5px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: #718096; }
+        .btn-success { background: #48bb78; }
+        .btn-warning { background: #ed8936; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #4a5568; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s ease; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        .stat-card .number { font-size: 2.5em; font-weight: bold; color: #667eea; margin-bottom: 5px; }
+        .stat-card .label { color: #718096; font-size: 14px; }
+        .grant-item, .donor-item { background: #f7fafc; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 4px solid #667eea; }
+        .grant-item h4, .donor-item h4 { color: #4a5568; margin-bottom: 8px; }
+        .grant-item .details, .donor-item .details { font-size: 14px; color: #718096; margin-bottom: 10px; }
+        .grant-item .actions, .donor-item .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .match-score { background: #48bb78; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; margin: 5px 5px 5px 0; }
+        .deadline-warning { background: #ed8936; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; margin: 5px 5px 5px 0; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 30px; border-radius: 15px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: #000; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading i { font-size: 2em; color: #667eea; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } .ai-actions-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-brain"></i> AI Donation & Grants Management System</h1>
+            <p class="subtitle">Toronto Centre of Learning & Development - Powered by Advanced AI</p>
+        </div>
+
+        <div class="ai-quick-actions">
+            <h2><i class="fas fa-magic"></i> AI Quick Actions Dashboard</h2>
+            <div class="ai-actions-grid">
+                <div class="ai-action-card" onclick="openModal('grantWriterModal')">
+                    <i class="fas fa-pen-fancy"></i>
+                    <h3>AI Grant Writer</h3>
+                    <p>Generate professional grant proposals instantly</p>
+                </div>
+                <div class="ai-action-card" onclick="openModal('grantFinderModal')">
+                    <i class="fas fa-search-dollar"></i>
+                    <h3>Grant Opportunity Finder</h3>
+                    <p>Discover perfectly matched funding opportunities</p>
+                </div>
+                <div class="ai-action-card" onclick="openModal('fundraisingModal')">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Fundraising Assistant</h3>
+                    <p>Optimize campaigns with AI-driven strategies</p>
+                </div>
+                <div class="ai-action-card" onclick="openModal('aiInsightsModal')">
+                    <i class="fas fa-lightbulb"></i>
+                    <h3>AI Data Insights</h3>
+                    <p>Get strategic insights from your data</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number">$6,400</div>
+                <div class="label">Total Donations</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">3</div>
+                <div class="label">Active Grants</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">4</div>
+                <div class="label">Total Donors</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">12</div>
+                <div class="label">AI Recommendations</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h3><i class="fas fa-heart"></i> Donations & Donors Management</h3>
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('donations', this)"><i class="fas fa-donate"></i> Donations</div>
+                    <div class="tab" onclick="switchTab('donors', this)"><i class="fas fa-users"></i> Donors</div>
+                    <div class="tab" onclick="switchTab('add-donation', this)"><i class="fas fa-plus"></i> Add New</div>
+                </div>
+
+                <div id="donations" class="tab-content active">
+                    <div class="donor-item">
+                        <h4>Sarah Johnson - $250.00</h4>
+                        <div class="details">Education Campaign • Jan 15, 2024 • Recurring</div>
+                        <div class="actions">
+                            <button class="btn btn-secondary">View Details</button>
+                            <button class="btn btn-success">Thank You Note</button>
+                        </div>
+                    </div>
+                    <div class="donor-item">
+                        <h4>Michael Chen - $1,000.00</h4>
+                        <div class="details">Literacy Campaign • Jan 20, 2024 • One-time</div>
+                        <div class="actions">
+                            <button class="btn btn-secondary">View Details</button>
+                            <button class="btn btn-success">Thank You Note</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="donors" class="tab-content">
+                    <div class="donor-item">
+                        <h4>Sarah Johnson</h4>
+                        <div class="details">sarah.johnson@email.com • Total: $750 • 3 donations</div>
+                        <div class="actions">
+                            <button class="btn btn-secondary">View Profile</button>
+                            <button class="btn btn-success">AI Engagement Plan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="add-donation" class="tab-content">
+                    <form onsubmit="addDonation(event)">
+                        <div class="form-group">
+                            <label>Donor Name</label>
+                            <input type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount</label>
+                            <input type="number" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Campaign</label>
+                            <select>
+                                <option value="general">General Fund</option>
+                                <option value="education">Education Programs</option>
+                                <option value="community">Community Development</option>
+                                <option value="literacy">Literacy Initiative</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn"><i class="fas fa-plus"></i> Add Donation</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-file-contract"></i> Grants Management</h3>
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('grants', this)"><i class="fas fa-list"></i> Active Grants</div>
+                    <div class="tab" onclick="switchTab('opportunities', this)"><i class="fas fa-search"></i> Opportunities</div>
+                    <div class="tab" onclick="switchTab('add-grant', this)"><i class="fas fa-plus"></i> Add Grant</div>
+                </div>
+
+                <div id="grants" class="tab-content active">
+                    <div class="grant-item">
+                        <h4>Ontario Education Innovation Grant</h4>
+                        <div class="details">Government of Ontario • $75,000 • Deadline: Mar 15, 2024</div>
+                        <div class="match-score">95% Match</div>
+                        <div class="deadline-warning">15 days left</div>
+                        <div class="actions">
+                            <button class="btn" onclick="openModal('grantWriterModal')">AI Write Proposal</button>
+                            <button class="btn btn-secondary">View Details</button>
+                        </div>
+                    </div>
+                    <div class="grant-item">
+                        <h4>Community Development Fund</h4>
+                        <div class="details">United Way Toronto • $25,000 • Deadline: Apr 1, 2024</div>
+                        <div class="match-score">88% Match</div>
+                        <div class="actions">
+                            <button class="btn" onclick="openModal('grantWriterModal')">AI Write Proposal</button>
+                            <button class="btn btn-secondary">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="opportunities" class="tab-content">
+                    <button class="btn" onclick="findOpportunities()"><i class="fas fa-magic"></i> AI Find Opportunities</button>
+                    <div id="opportunitiesList" style="margin-top: 20px;">
+                        <p>Click "AI Find Opportunities" to discover new funding opportunities.</p>
+                    </div>
+                </div>
+
+                <div id="add-grant" class="tab-content">
+                    <form onsubmit="addGrant(event)">
+                        <div class="form-group">
+                            <label>Grant Title</label>
+                            <input type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Funder</label>
+                            <input type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount</label>
+                            <input type="number" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Deadline</label>
+                            <input type="date" required>
+                        </div>
+                        <button type="submit" class="btn"><i class="fas fa-plus"></i> Add Grant</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="grantWriterModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('grantWriterModal')">&times;</span>
+            <h2><i class="fas fa-pen-fancy"></i> AI Grant Writing Assistant</h2>
+            <button class="btn" onclick="generateProposal()"><i class="fas fa-magic"></i> Generate AI Proposal</button>
+            <div class="loading" id="proposalLoading"><i class="fas fa-spinner"></i><p>AI is generating your proposal...</p></div>
+            <div id="generatedProposal" style="display: none; margin-top: 20px;">
+                <h3>Generated Proposal - Executive Summary</h3>
+                <textarea rows="10" style="width: 100%; margin-bottom: 15px;" readonly>The Toronto Centre of Learning & Development respectfully requests $75,000 from the Ontario Education Innovation Grant to implement our "Digital Literacy Bridge" program. This innovative initiative will serve 200 adult learners from marginalized communities, providing essential digital skills training that bridges the technology gap and enhances employment opportunities.
+
+Our organization, established in 1990, has a proven track record of serving Toronto's diverse communities through comprehensive education and workforce development programs. The Digital Literacy Bridge program directly aligns with Ontario's priorities for educational innovation and economic inclusion.
+
+Expected outcomes include 85% program completion rate, 70% employment placement within 6 months, and average wage increase of 35% for participants. This investment will generate significant return through increased tax revenue and enhanced community economic development.</textarea>
+                <button class="btn" onclick="copyToClipboard()"><i class="fas fa-copy"></i> Copy to Clipboard</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="grantFinderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('grantFinderModal')">&times;</span>
+            <h2><i class="fas fa-search-dollar"></i> AI Grant Opportunity Finder</h2>
+            <button class="btn" onclick="searchOpportunities()"><i class="fas fa-search"></i> AI Search Opportunities</button>
+            <div class="loading" id="searchLoading"><i class="fas fa-spinner"></i><p>AI is analyzing opportunities...</p></div>
+            <div id="foundOpportunities" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <div id="fundraisingModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('fundraisingModal')">&times;</span>
+            <h2><i class="fas fa-chart-line"></i> AI Fundraising Assistant</h2>
+            <button class="btn" onclick="generateRecommendations()"><i class="fas fa-rocket"></i> Get AI Recommendations</button>
+            <div id="recommendations" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <div id="aiInsightsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('aiInsightsModal')">&times;</span>
+            <h2><i class="fas fa-lightbulb"></i> AI Data Insights Agent</h2>
+            <button class="btn" onclick="generateInsights()"><i class="fas fa-brain"></i> Generate Strategic Insights</button>
+            <div class="loading" id="insightsLoading"><i class="fas fa-spinner"></i><p>AI is analyzing your data...</p></div>
+            <div id="insights" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName, element) {
+            const parent = element.closest('.card');
+            parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            parent.querySelector(`#${tabName}`).classList.add('active');
+            element.classList.add('active');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function generateProposal() {
+            document.getElementById('proposalLoading').style.display = 'block';
+            document.getElementById('generatedProposal').style.display = 'none';
+            setTimeout(() => {
+                document.getElementById('proposalLoading').style.display = 'none';
+                document.getElementById('generatedProposal').style.display = 'block';
+            }, 2000);
+        }
+
+        function copyToClipboard() {
+            const textarea = document.querySelector('#generatedProposal textarea');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Proposal copied to clipboard!');
+        }
+
+        function findOpportunities() {
+            document.getElementById('opportunitiesList').innerHTML = `
+                <div class="grant-item">
+                    <h4>Technology Innovation Fund</h4>
+                    <div class="details">Tech Foundation • $100,000 • Deadline: Jun 15, 2024</div>
+                    <div class="match-score">91% Match</div>
+                    <div class="actions">
+                        <button class="btn" onclick="openModal('grantWriterModal')">AI Write Proposal</button>
+                    </div>
+                </div>
+                <div class="grant-item">
+                    <h4>Community Education Grant</h4>
+                    <div class="details">Education Ministry • $50,000 • Deadline: Jul 1, 2024</div>
+                    <div class="match-score">89% Match</div>
+                    <div class="actions">
+                        <button class="btn" onclick="openModal('grantWriterModal')">AI Write Proposal</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function searchOpportunities() {
+            document.getElementById('searchLoading').style.display = 'block';
+            document.getElementById('foundOpportunities').innerHTML = '';
+            setTimeout(() => {
+                document.getElementById('searchLoading').style.display = 'none';
+                document.getElementById('foundOpportunities').innerHTML = `
+                    <div class="grant-item">
+                        <h4>Digital Skills Training Grant</h4>
+                        <div class="details">Skills Development Canada • $80,000 • Deadline: Aug 30, 2024</div>
+                        <div class="match-score">94% Match</div>
+                        <div class="actions">
+                            <button class="btn" onclick="openModal('grantWriterModal')">AI Write Proposal</button>
+                        </div>
+                    </div>
+                    <div class="grant-item">
+                        <h4>Adult Learning Initiative</h4>
+                        <div class="details">Learning Foundation • $60,000 • Deadline: Sep 15, 2024</div>
+                        <div class="match-score">87% Match</div>
+                        <div class="actions">
+                            <button class="btn" onclick="openModal('grantWriterModal')">AI Write Proposal</button>
+                        </div>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        function generateRecommendations() {
+            document.getElementById('recommendations').innerHTML = `
+                <div class="insight-item">
+                    <h4>🎯 Campaign Optimization</h4>
+                    <p><strong>Recommendation:</strong> Increase email frequency for Education Campaign by 25%. Current donors show 67% higher engagement with educational content.</p>
+                    <p><strong>Expected Impact:</strong> +$2,400 additional donations over 3 months</p>
+                    <button class="btn btn-success">Implement</button>
+                </div>
+                <div class="insight-item">
+                    <h4>📧 Donor Engagement</h4>
+                    <p><strong>Recommendation:</strong> Send personalized thank-you videos to donors over $500. This increases retention by 45%.</p>
+                    <p><strong>Expected Impact:</strong> Improve donor retention from 60% to 87%</p>
+                    <button class="btn btn-success">Implement</button>
+                </div>
+            `;
+        }
+
+        function generateInsights() {
+            document.getElementById('insightsLoading').style.display = 'block';
+            document.getElementById('insights').innerHTML = '';
+            setTimeout(() => {
+                document.getElementById('insightsLoading').style.display = 'none';
+                document.getElementById('insights').innerHTML = `
+                    <div class="insight-item critical">
+                        <span class="insight-priority critical">CRITICAL</span>
+                        <h4>📊 Donor Retention Risk</h4>
+                        <p>3 major donors (representing 40% of funding) haven't donated in 6+ months. Immediate engagement required.</p>
+                        <button class="btn btn-warning">Create Retention Campaign</button>
+                    </div>
+                    <div class="insight-item high">
+                        <span class="insight-priority high">HIGH</span>
+                        <h4>💰 Grant Opportunity</h4>
+                        <p>Federal Skills Development Grant opens next month. Perfect 96% match for your programs. Early application recommended.</p>
+                        <button class="btn btn-success">Start Application</button>
+                    </div>
+                    <div class="insight-item medium">
+                        <span class="insight-priority medium">MEDIUM</span>
+                        <h4>📈 Growth Opportunity</h4>
+                        <p>Corporate partnership potential identified with 5 local tech companies. Combined potential: $50,000 annually.</p>
+                        <button class="btn">Explore Partnerships</button>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        function addDonation(event) {
+            event.preventDefault();
+            alert('Donation added successfully! AI will automatically categorize and send thank-you communications.');
+            event.target.reset();
+        }
+
+        function addGrant(event) {
+            event.preventDefault();
+            alert('Grant added successfully! AI will monitor deadlines and suggest optimal application timing.');
+            event.target.reset();
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
